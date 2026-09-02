@@ -1,0 +1,30 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environment
+.venv/
+
+# Secrets and Google authentication
+.env
+credentials.json
+token.json
+
+# Private downloaded documents
+data/
+google-drive-rag-project-guide.md
+testing.ipynb
+
+# Local vector database and sync state
+chroma_db/
+sync_state.json
+
+# macOS
+.DS_Store
+
+# IDE configuration
+.idea/
