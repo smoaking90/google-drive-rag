@@ -3,12 +3,11 @@ from langchain_chroma import Chroma
 from langchain_ollama import OllamaEmbeddings
 from langchain_core.documents import Document
 from pathlib import Path
-from glob import glob
-import os
 
-embedding_model = 'qwen3-embedding:0.6b'
-# collection_name = 'google_drive'
-collection_name = 'test_data'
+
+EMBEDDING_MODEL = 'qwen3-embedding:0.6b'
+# COLLECTION_NAME = 'google_drive'
+COLLECTION_NAME = 'test_data'
 DB_NAME = "./chroma_db"
 BASE_DIR = Path(__file__).resolve().parent
 TEST_DATA_DIR = BASE_DIR / "data"
@@ -50,17 +49,17 @@ def create_chunks(docs):
 
 # TO DB
 def create_embeddings(chunks):
-    embeddings = OllamaEmbeddings(model=embedding_model)
+    embeddings = OllamaEmbeddings(model=EMBEDDING_MODEL)
 
     if DB_PATH.exists():
         Chroma(
-            collection_name=collection_name,
+            collection_name=COLLECTION_NAME,
             persist_directory=str(DB_PATH),
             embedding_function=embeddings
         ).delete_collection()
 
     vector_store = Chroma(
-        collection_name=collection_name,
+        collection_name=COLLECTION_NAME,
         embedding_function=embeddings,
         persist_directory=DB_NAME,
     )
