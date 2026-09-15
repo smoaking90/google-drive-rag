@@ -32,7 +32,7 @@ def get_vector_store():
 
 def answer_question(question: str):
     vector_store = get_vector_store()
-    retrieved = vector_store.similarity_search(question, k=6)
+    retrieved = vector_store.similarity_search(question, k=10)
 
     context_parts = []
 
@@ -45,20 +45,55 @@ def answer_question(question: str):
     context = "\n\n".join(context_parts)
 
     prompt = f"""
-Answer the question using only the provided sources.
-
-If the sources do not contain enough information, say that the answer was not
-found in the indexed files. Cite supporting sources using [Source 1],
-[Source 2], and so on.
-
-SOURCES:
-{context}
-
-QUESTION:
-{question}
-"""
+        Answer the question using only the provided sources.
+        
+        If the sources do not contain enough information, say that the answer was not
+        found in the indexed files. Cite supporting sources using [Source 1],
+        [Source 2], and so on.
+        
+        SOURCES:
+        {context}
+        
+        QUESTION:
+        {question}
+        """
 
     response = llm.invoke(prompt)
     return response.content, retrieved
 
-print(answer_question("What is the name of the company you have documents for?"))
+
+# print(answer_question('Who is the CEO of BluePeak Hotels?'))
+# print(answer_question('What is the goal of BluePeak Hotels?'))
+# print(answer_question('Is there any information about the profitability of BluePeak Hotels?'))
+#print(answer_question('Can I cancel my reservation 12 hours before it starts'))
+# print(answer_question('What happens when pickup differs from forecast by more than 20 percent for three consecutive days during event forecasts?'))
+
+
+# vector_store = get_vector_store()
+# stored = vector_store.get()
+
+# matching_chunks = [
+#     text
+#     for text in stored["documents"]
+#     if text and "Elena Marin" in text
+# ]
+#
+# print(f"Matching stored chunks: {len(matching_chunks)}")
+#
+# for chunk in matching_chunks:
+#     print(chunk)
+#     print()
+
+
+# question = "Who is the CEO of BluePeak Hotels?"
+#
+# retrieved = vector_store.similarity_search(
+#     question,
+#     k=10,
+# )
+#
+# for number, document in enumerate(retrieved, start=1):
+#     print(f"RESULT {number}")
+#     print(document.metadata)
+#     print(document.page_content)
+#     print()
