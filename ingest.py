@@ -2,36 +2,63 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_chroma import Chroma
 from langchain_ollama import OllamaEmbeddings
 from langchain_core.documents import Document
+from langchain_community.document_loaders import PyPDFLoader
 from pathlib import Path
 
 
 EMBEDDING_MODEL = 'qwen3-embedding:0.6b'
-# COLLECTION_NAME = 'google_drive'
-COLLECTION_NAME = 'test_data'
+COLLECTION_NAME = 'google_drive'
 DB_NAME = "./chroma_db"
 BASE_DIR = Path(__file__).resolve().parent
-TEST_DATA_DIR = BASE_DIR / "data"
+DATA_DIR = BASE_DIR / "data"
 DB_PATH = BASE_DIR / DB_NAME
 
 
 
 ### GETTING DOCUMENTS
+SUPPORTED_EXTENSIONS = {".md", ".txt", ".pdf"}
+
 def fetch_documents():
-    """LangChain loader"""
-    file_paths = sorted(TEST_DATA_DIR.rglob("*.md"))
+    file_paths = sorted(
+        path
+        for path in DATA_DIR.rglob("*")
+        if path.is_file()
+        and path.suffix.lower() in SUPPORTED_EXTENSIONS
+    )
+
     documents = []
+
     for file_path in file_paths:
-        text = file_path.read_text(encoding="utf-8")
-        document = Document(
-            page_content=text,
-            metadata={
-                'source': str(file_path),
-                'file_name': file_path.name,
-                'file_type': file_path.suffix
-            },
-        )
-        documents.append(document)
-    print(f"Loaded {len(documents)} documents")
+        common_metadata = {
+            "source": str(file_path),
+            "file_name": file_path.name,
+            "file_type": file_path.suffix.lower(),
+        }
+
+        if file_path.suffix.lower() in {".md", ".txt"}:
+            text = file_path.read_text(encoding="utf-8")
+
+            document = Document(
+                page_content=text,
+                metadata=common_metadata,
+            )
+
+            documents.append(document)
+
+        elif file_path.suffix.lower() == ".pdf":
+            loader = PyPDFLoader(str(file_path))
+            pdf_documents = loader.load()
+
+            for document in pdf_documents:
+                document.metadata.update(common_metadata)
+
+            documents.extend(pdf_documents)
+
+    print(
+        f"Loaded {len(documents)} document sections "
+        f"from {len(file_paths)} files"
+    )
+
     return documents
 
 
@@ -75,4 +102,4 @@ if __name__ == "__main__":
     documents = fetch_documents()
     chunks = create_chunks(documents)
     create_embeddings(chunks)
-    print("Ingestion complete")
+    # print("Ingestion complete")

@@ -4,8 +4,7 @@ from pathlib import Path
 
 llm = ChatOllama(model="gpt-oss:20b", temperature=0)
 EMBEDDING_MODEL = 'qwen3-embedding:0.6b'
-# COLLECTION_NAME = 'google_drive'
-COLLECTION_NAME = 'test_data'
+COLLECTION_NAME = 'google_drive'
 DB_NAME = "./chroma_db"
 BASE_DIR = Path(__file__).resolve().parent
 TEST_DATA_DIR = BASE_DIR / "data"
@@ -62,12 +61,25 @@ def answer_question(question: str):
     return response.content, retrieved
 
 
-# print(answer_question('Who is the CEO of BluePeak Hotels?'))
-# print(answer_question('What is the goal of BluePeak Hotels?'))
-# print(answer_question('Is there any information about the profitability of BluePeak Hotels?'))
-#print(answer_question('Can I cancel my reservation 12 hours before it starts'))
-# print(answer_question('What happens when pickup differs from forecast by more than 20 percent for three consecutive days during event forecasts?'))
+# print(answer_question('Based on this documentation you have available, what is the name of the person who owns this data?'))
+# print(answer_question('Why was this person made redundant from their job?'))
 
+
+
+vector_store = get_vector_store()
+stored = vector_store.get()
+question = 'Why was this person made redundant from their job?'
+
+retrieved = vector_store.similarity_search(
+    question,
+    k=10,
+)
+
+for number, document in enumerate(retrieved, start=1):
+    print(f"RESULT {number}")
+    print(document.metadata)
+    print(document.page_content)
+    print()
 
 # vector_store = get_vector_store()
 # stored = vector_store.get()
