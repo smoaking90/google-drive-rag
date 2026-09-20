@@ -10,6 +10,22 @@ BASE_DIR = Path(__file__).resolve().parent
 TEST_DATA_DIR = BASE_DIR / "data"
 DB_PATH = BASE_DIR / DB_NAME
 
+SYSTEM_PROMPT = """
+You answer questions using only the retrieved document context below.
+
+Conversation history may help you understand follow-up questions, but it is
+not a factual source.
+
+If the retrieved context does not contain enough information, say that the
+answer was not found in the indexed documents.
+
+Cite supporting information using [Source 1], [Source 2], and so on.
+
+RETRIEVED CONTEXT:
+
+{context}
+"""
+
 
 def get_vector_store():
     if not DB_PATH.exists():
@@ -29,35 +45,53 @@ def get_vector_store():
 
     return vector_store
 
-def answer_question(question: str):
-    vector_store = get_vector_store()
-    retrieved = vector_store.similarity_search(question, k=10)
+
+
+
+def answer_question(question, history=None):
+    if history is None:
+        history = []
+
+    retrieved = vector_store.similarity_search(
+        question,
+        k=6,
+    )
 
     context_parts = []
 
     for number, document in enumerate(retrieved, start=1):
-        file_name = document.metadata.get("file_name", "Unknown file")
+        file_name = document.metadata.get(
+            "file_name",
+            "Unknown file",
+        )
+
         context_parts.append(
-            f"[Source {number}: {file_name}]\n{document.page_content}"
+            f"[Source {number}: {file_name}]\n"
+            f"{document.page_content}"
         )
 
     context = "\n\n".join(context_parts)
 
-    prompt = f"""
-        Answer the question using only the provided sources.
-        
-        If the sources do not contain enough information, say that the answer was not
-        found in the indexed files. Cite supporting sources using [Source 1],
-        [Source 2], and so on.
-        
-        SOURCES:
-        {context}
-        
-        QUESTION:
-        {question}
-        """
+    system_prompt = SYSTEM_PROMPT.format(
+        context=context,
+    )
 
-    response = llm.invoke(prompt)
+    recent_history = history[-8:]
+
+    messages = [
+        {
+            "role": "system",
+            "content": system_prompt,
+        },
+        *recent_history,
+        {
+            "role": "user",
+            "content": question,
+        },
+    ]
+
+    response = llm.invoke(messages)
+
     return response.content, retrieved
 
 
